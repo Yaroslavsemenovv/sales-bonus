@@ -48,6 +48,7 @@ function analyzeSalesData(data, options) {
         || !Array.isArray(data.purchase_records)
         || data.sellers.length === 0
         || data.products.length === 0
+        || data.purchase_records.length === 0
     ) {
         throw new Error('Некорректные входные данные');
     }
@@ -83,14 +84,11 @@ function analyzeSalesData(data, options) {
 
         record.items.forEach(item => {
             const _product = productIndex[item.sku];
-            if (!_product) {
-                console.warn(`Товар с SKU ${item.sku} не найден`);
-                return;
-            }
+            if (!_product) return;
 
-            const cost = _product.purchase_price * item.quantity;
-            const revenue = calculateRevenue(item, _product);
-            const profit = revenue - cost;
+            const revenue = +calculateRevenue(item, _product).toFixed(2);
+            const cost = +(_product.purchase_price * item.quantity).toFixed(2);
+            const profit = +(revenue - cost).toFixed(2);
 
             seller.revenue += revenue;
             seller.profit += profit;
@@ -103,8 +101,8 @@ function analyzeSalesData(data, options) {
     sellerStats.sort((a, b) => b.profit - a.profit);
 
     sellerStats.forEach((seller, index) => {
- 
-        seller.bonus = calculateBonus(index, sellerStats.length, seller);
+
+        seller.bonus = +calculateBonus(index, sellerStats.length, seller).toFixed(2);
 
         seller.top_products = Object.entries(seller.products_sold)
             .map(([sku, quantity]) => ({ sku, quantity }))
